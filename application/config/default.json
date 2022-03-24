@@ -1,0 +1,22 @@
+{
+  "server": {
+    "host": "localhost",
+    "port": 8080
+  },
+  "database": {
+    "host": "localhost",
+    "user": "newuser",
+    "password": "password",
+    "database": "voting-system-database"
+  },
+  "saltRounds": 10,
+  "default_role": "User",
+  "roles": {
+    "Admin": {
+    },
+    "User": {
+    },
+    "Stranger": {
+    }
+  }
+}
