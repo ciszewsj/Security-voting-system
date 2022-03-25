@@ -7,6 +7,10 @@ class PasswordSecurity {
         let salt = await bcrypt.genSalt(10);
         return bcrypt.hash(password, salt);
     };
+
+    async comparePassword(password, hashPassword) {
+        return  bcrypt.compare(password.toString(), hashPassword.toString());
+    }
 }
 
 module.exports.PasswordSecurity = PasswordSecurity;

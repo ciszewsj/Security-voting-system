@@ -11,12 +11,5 @@
   },
   "saltRounds": 10,
   "default_role": "User",
-  "roles": {
-    "Admin": {
-    },
-    "User": {
-    },
-    "Stranger": {
-    }
-  }
+  "access_token": "SecreteKey"
 }

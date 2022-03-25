@@ -9,13 +9,12 @@ class Database {
             host: config.get('database.host'),
             user: config.get('database.user'),
             password: config.get('database.password'),
-            database: config.get('database.database'),
-            port: 9002
+            database: config.get('database.database')
         });
 
         this.database.connect((err) => {
             if (err) throw err;
-            console.log("Connected!");
+            console.log("Connected to database!");
         });
 
         this.query = util.promisify(this.database.query).bind(this.database);
@@ -41,6 +40,16 @@ class Database {
         await this.query(sql);
     }
 
+    async getUserDataByEmail(email) {
+        let sql = `SELECT * FROM users WHERE Email = "${email}"`;
+        return JSON.parse(JSON.stringify(await this.query(sql)))[0];
+    }
+
+    async getUserDataById(userId) {
+        let sql = `SELECT * FROM users WHERE Id = "${userId}"`;
+        return JSON.parse(JSON.stringify(await this.query(sql)))[0];
+    }
+
     async getImagesInfo(userId, status) {
         let sql = `SELECT i.Title AS Title, i.Description AS Description, i.Id AS ImageId, u.Name AS Author,
 			IFNULL(l.numberOfLikes,0), IF(ls.ImageID is NULL, 'false', 'true') AS Liked
@@ -49,15 +58,18 @@ class Database {
             LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes GROUP BY ImageId) l ON i.Id = l.ImageId
 			LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes WHERE UserId = "${userId}" GROUP BY ImageId) ls ON i.id = ls.ImageId
 			WHERE i.Active = "${status}"`;
-        return await this.query(sql);
+        return JSON.stringify(await this.query(sql));
     }
 
     async putImage(title, description, userid) {
         let sql = `INSERT INTO images(Title, Description, UserId, Active) 
                 VALUES ("${title}", "${description}", ${userid}, true)`;
-        await this.query(sql);
+        return await this.query(sql);
+    }
+
+    async getMyImageInfo(userid) {
         let sql2 = `SELECT Id FROM images WHERE UserId = ${userid}`;
-        return await this.query(sql2);
+        return JSON.parse(JSON.stringify(await this.query(sql2)))[0];
     }
 
     async removeImage(imageId) {
@@ -82,8 +94,8 @@ class Database {
         await this.query(sql);
     }
 
-    async ifImageActive(imageId) {
-        let sql = `SELECT * FROM images WHERE id = "${imageId}" AND Active = true`;
+    async ifImageActive(imageId, status = true) {
+        let sql = `SELECT * FROM images WHERE id = "${imageId}" AND Active = ${status}`;
         let images = await this.query(sql);
         return images.length === 1;
     }
