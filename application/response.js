@@ -1,4 +1,3 @@
-const {body} = require("express-validator");
 let success_response = body => {
     return response("SUCCESS", body);
 };

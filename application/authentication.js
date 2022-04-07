@@ -17,13 +17,11 @@ const authenticateJWT = (req, res, next) => {
 };
 const checkUserDataJWT = (req, res, next) => {
     const token = req.headers.authorization;
-
     if (token) {
         jwt.verify(token, "1222", (err, user) => {
             if (!err) {
                 req.userid = user;
             }
-            next();
         });
     }
     next();

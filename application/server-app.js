@@ -20,20 +20,21 @@ app = express();
 
 const database = new databaseConnector.Database();
 
-
 app.use("/static", express.static(path.resolve(__dirname, "frontend", "static")));
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
-app.get('/api/getMyImageInfo', authenticateJWT, async (req, res) => {
-    try {
-        let image = await database.getMyImageInfo(req.userid);
-        return res.json(image);
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json(response.internal_error_response({}));
-    }
-});
+app.get('/api/getMyImageInfo'
+    , authenticateJWT
+    , async (req, res) => {
+        try {
+            let image = await database.getMyImageInfo(req.userid);
+            return res.json(image);
+        } catch (e) {
+            console.error(e);
+            return res.status(500).json(response.internal_error_response({}));
+        }
+    });
 
 app.get('/api/getImagesInfo'
     , checkUserDataJWT
@@ -115,11 +116,11 @@ app.post('/api/register',
             let translateErrors = [];
             for (let error of errors.array()) {
                 translateErrors.push({
-                    field: error.param,
+                    param: error.param,
                     msg: error.msg
                 });
             }
-            return res.status(400).json(response.failure_response(translateErrors));
+            return res.status(400).json(response.failure_response({errors: translateErrors}));
         }
         try {
             try {
@@ -129,17 +130,17 @@ app.post('/api/register',
                     let errors = [];
                     if (!await database.ifUserNickNotExist(req.body.Name)) {
                         errors.push({
-                            field: 'Name',
+                            param: 'Name',
                             msg: 'Użytkownik o podanej nazwie już istnieje.'
                         });
                     }
                     if (!await database.ifEmailExist(req.body.Email)) {
                         errors.push({
-                            field: 'Name',
-                            msg: 'Użytkownik o podanym emailu już istnieje.'
+                            param: 'Name',
+                            msg: 'Użytkownik o podanym ema  ilu już istnieje.'
                         });
                     }
-                    return res.status(400).json(response.failure_response(errors));
+                    return res.status(400).json(response.failure_response({errors: errors}));
                 } else {
                     throw e;
                 }
@@ -152,20 +153,26 @@ app.post('/api/register',
     });
 
 app.post('/api/login',
-    body('Email').isEmail(),
+    body('Email').isEmail()
+        .withMessage("Nieprwaidłowy email"),
     body('Password').isString()
         .isString()
         .isLength({min: 5, max: 60}),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({errors: errors.array()});
+            return res.status(400).json(response.failure_response({errors: errors.array()}));
         }
         try {
             let userData = await database.getUserDataByEmail(req.body.Email);
             if (userData === undefined) {
-                return res.status(404).json(response.failure_response(
-                    {"msg": "Nie znaleziono użytkownika."}
+                return res.status(400).json(response.failure_response(
+                    {
+                        errors: [{
+                            "msg": "Nie znaleziono użytkownika.",
+                            "param": "General"
+                        }]
+                    }
                 ));
             }
             if (userData.Active === false) {
@@ -177,7 +184,7 @@ app.post('/api/login',
                 }, "1222", {
                     expiresIn: 86400
                 });
-                return res.status(404).json(response.success_response(
+                return res.status(200).json(response.success_response(
                     {
                         'token': token,
                         'role': userData.Role,
@@ -186,7 +193,10 @@ app.post('/api/login',
             }
             return res.json(response.unauthorized_response(
                 {
-                    "msg": "Nazwa użytkownika lub hasło jest nieprawidłowa."
+                    errors: [{
+                        "msg": "Nazwa użytkownika lub hasło jest nieprawidłowa.",
+                        "param": "General"
+                    }]
                 }
             ));
         } catch (e) {
@@ -194,6 +204,17 @@ app.post('/api/login',
             return res.status(500).json(response.internal_error_response({}));
         }
     });
+
+app.get('/api/checkStatus',
+    checkUserDataJWT,
+    async (req, res) => {
+        if (req.userid !== undefined) {
+            return res.json(response.success_response({status: true}));
+        } else {
+            return res.json(response.success_response({status: false}));
+        }
+    }
+);
 
 app.get('/api/logout', async (req, res) => {
     }
@@ -211,8 +232,13 @@ app.post('/api/addImage',
     async (req, res) => {
         try {
             try {
+                console.log("e.code");
+
                 await database.putImage("123", "123456", 1).Id;
+                console.log("e.code");
+
             } catch (e) {
+                console.log("e.code");
                 if (e.code === "ER_DUP_ENTRY") {
                     return res.json(response.failure_response({"msg": "Użytkownik może umieścić tylko 1 obrazek"}));
                 } else {
@@ -273,7 +299,7 @@ app.get('/api/acceptImage/:id',
         try {
             let user = await database.getUserDataById(req.userid);
             if (user.role !== "Admin") {
-                    return res.status(403).json(response.unauthorized_response({}));
+                return res.status(403).json(response.unauthorized_response({}));
             }
             if (!await database.ifImageActive(req.params.id, false)) {
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest już aktywny, bądź nie istnieje"}));
@@ -292,8 +318,9 @@ app.get('/api/getImageToAcceptList',
     async (req, res) => {
         try {
             let user = await database.getUserDataById(req.userid);
-            if (user.role !== "Admin") {
-                    return res.status(403).json(response.unauthorized_response({}));
+            console.log(user.Role);
+            if (user.Role !== "Admin") {
+                return res.status(403).json(response.unauthorized_response({}));
 
             }
             let imagesInfo = await database.getImagesInfo(null, false);
@@ -305,13 +332,13 @@ app.get('/api/getImageToAcceptList',
     }
 );
 
-app.get('/api/*', async (req, res) => {
-    res.status(404).json(response.not_support_response({}))
-});
-
-app.post('/api/*', async (req, res) => {
-    res.status(404).json(response.not_support_response({}))
-});
+// app.get('/api/*', async (req, res) => {
+//     res.status(404).json(response.not_support_response({}))
+// // });
+//
+// app.post('/api/*', async (req, res) => {
+//     res.status(404).json(response.not_support_response({}))
+// });
 
 
 app.get('/*', async (req, res) => {

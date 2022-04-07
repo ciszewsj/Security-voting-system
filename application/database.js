@@ -50,26 +50,26 @@ class Database {
         return JSON.parse(JSON.stringify(await this.query(sql)))[0];
     }
 
-    async getImagesInfo(userId, status) {
+    async getImagesInfo(userId, status = true) {
         let sql = `SELECT i.Title AS Title, i.Description AS Description, i.Id AS ImageId, u.Name AS Author,
-			IFNULL(l.numberOfLikes,0), IF(ls.ImageID is NULL, 'false', 'true') AS Liked
+			IFNULL(l.numberOfLikes,0) as Likes, IF(ls.ImageID is NULL, 'false', 'true') AS Liked
             FROM images i 
             LEFT JOIN users u ON i.UserId = u.id 
             LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes GROUP BY ImageId) l ON i.Id = l.ImageId
 			LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes WHERE UserId = "${userId}" GROUP BY ImageId) ls ON i.id = ls.ImageId
-			WHERE i.Active = "${status}"`;
-        return JSON.stringify(await this.query(sql));
+			WHERE i.Active = ${status}`;
+        return JSON.parse(JSON.stringify(await this.query(sql)));
     }
 
     async putImage(title, description, userid) {
-        let sql = `INSERT INTO images(Title, Description, UserId, Active) 
+        let sql = `INSERT INTO images(Title, Description, UserId, Active)  
                 VALUES ("${title}", "${description}", ${userid}, true)`;
-        return await this.query(sql);
+        await this.query(sql);
     }
 
     async getMyImageInfo(userid) {
-        let sql2 = `SELECT Id FROM images WHERE UserId = ${userid}`;
-        return JSON.parse(JSON.stringify(await this.query(sql2)))[0];
+        let sql = `SELECT Id FROM images WHERE UserId = ${userid}`;
+        return JSON.parse(JSON.stringify(await this.query(sql)))[0];
     }
 
     async removeImage(imageId) {
