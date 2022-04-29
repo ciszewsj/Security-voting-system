@@ -14,6 +14,8 @@ const response = require('./response');
 const {authenticateJWT, checkUserDataJWT} = require("./authentication");
 const {auth} = require("mysql/lib/protocol/Auth");
 
+const sizeOf = require('image-size');
+
 let pass = new passwordSecurity.PasswordSecurity();
 
 app = express();
@@ -21,15 +23,16 @@ app = express();
 const database = new databaseConnector.Database();
 
 app.use("/static", express.static(path.resolve(__dirname, "frontend", "static")));
-app.use(bodyParser.urlencoded({extended: false}))
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json({limit: '150mb'}));
+
 
 app.get('/api/getMyImageInfo'
     , authenticateJWT
     , async (req, res) => {
         try {
             let image = await database.getMyImageInfo(req.userid);
-            return res.json(image);
+            return res.json(response.success_response(image));
         } catch (e) {
             console.error(e);
             return res.status(500).json(response.internal_error_response({}));
@@ -136,8 +139,8 @@ app.post('/api/register',
                     }
                     if (!await database.ifEmailExist(req.body.Email)) {
                         errors.push({
-                            param: 'Name',
-                            msg: 'Użytkownik o podanym ema  ilu już istnieje.'
+                            param: 'Email',
+                            msg: 'Użytkownik o podanym emailu już istnieje.'
                         });
                     }
                     return res.status(400).json(response.failure_response({errors: errors}));
@@ -228,15 +231,31 @@ app.post('/api/addImage',
         .isLength({min: 1, max: 255}),
     body('Description')
         .isLength({max: 1024}),
-    body('Image').isBase64(),
+    body('Image')
+        .exists()
+        .notEmpty()
+        .isBase64(),
     async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(response.failure_response({errors: errors.array()}));
+        }
+        let img = Buffer.from(req.body.Image.split(';base64,').pop(), 'base64');
+        let dimensions = sizeOf(img);
+        let configDim = config.get('image_size');
+        if (dimensions.width < configDim.get("min_width") || dimensions.width > configDim.get("max_width") ||
+            dimensions.height < configDim.get("min_height") || dimensions.height > configDim.get("max_height")) {
+            return res.status(400).json(response.failure_response({
+                errors: [{
+                    "msg": `Akceptowalny rozmiar zdjęcia to ${configDim.get("min_width")}x${configDim.get("min_height")} - ${configDim.get("max_width")}x${configDim.get("max_height")}`,
+                    "param": "Image",
+                }]
+            }));
+        }
         try {
             try {
-                console.log("e.code");
-
-                await database.putImage("123", "123456", 1).Id;
-                console.log("e.code");
-
+                console.log()
+                await database.putImage(req.body.Title, req.body.Description, req.userid).Id;
             } catch (e) {
                 console.log("e.code");
                 if (e.code === "ER_DUP_ENTRY") {
@@ -245,8 +264,8 @@ app.post('/api/addImage',
                     throw e;
                 }
             }
-            let imageId = await database.getMyImageInfo(req.userid)
-            fs.writeFile("images/" + imageId + ".png", req.body.Image, 'base64', function (err) {
+            let imageId = await database.getMyImageInfo(req.userid);
+            fs.writeFile("images/" + imageId.Id + ".png", req.body.Image, 'base64', function (err) {
             });
             return res.json(response.success_response({}));
         } catch (e) {
@@ -331,15 +350,6 @@ app.get('/api/getImageToAcceptList',
         }
     }
 );
-
-// app.get('/api/*', async (req, res) => {
-//     res.status(404).json(response.not_support_response({}))
-// // });
-//
-// app.post('/api/*', async (req, res) => {
-//     res.status(404).json(response.not_support_response({}))
-// });
-
 
 app.get('/*', async (req, res) => {
     res.sendFile(path.resolve(__dirname, "frontend", "index.html"));

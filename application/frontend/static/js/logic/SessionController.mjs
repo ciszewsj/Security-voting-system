@@ -26,15 +26,13 @@ let checkIfLoggedIn = async (token) => {
         }
     ).then((json) => {
         if (json.body.status === true) {
-            setLoggedBar();
         } else if (json.body.status === false) {
             removeSession();
-            setNormalBar();
         } else {
             console.error("navbarError???");
             removeSession();
-            setNormalBar();
         }
+        setNavBar();
     })
         .catch(e => {
             console.log(e);
@@ -43,21 +41,33 @@ let checkIfLoggedIn = async (token) => {
 }
 
 
-let setLoggedBar = () => {
-        let nav = document.getElementById("nav");
-        nav.innerHTML = `<a href="/" class="nav__link" data-link>Dashboard</a>
-                        <a href="/myimage" class="nav__link" data-link>MyImage</a>
-                        <a href="/posts/34" class="nav__link" data-link>Posts</a>
-                        <a href="/settings" class="nav__link" data-link>About</a>
-                        <a href="/login" class="nav__link" data-link>LOGOUT</a>`
+let setNavBar = () => {
+    let nav = document.getElementById("nav");
+    nav.innerHTML = `<a href="/" class="nav__link" data-link>Obrazki</a>
+                    <div id="my-image-elem"></div>
+                    <div id="accept-image-elem"></div>
+                    <a href="/settings" class="nav__link" data-link>O stronie</a>
+                    <div id="login-elem"></div>
+                    <div id="register-elem"></div>
+                        `
+    if (getSession().token.length > 1) {
+        document.getElementById("my-image-elem").innerHTML = `
+           <a href="/myimage" class="nav__link" data-link>Mój obrazek</a>
+        `;
+        document.getElementById("login-elem").innerHTML = `
+            <a href="/logout" class="nav__link" data-link>Wyloguj</a>
+        `;
+        if (getSession().role === "Admin") {
+            document.getElementById("accept-image-elem").innerHTML = `
+                <a href="/imageToAccept" class="nav__link" data-link>Niezaakceptowane</a>
+            `;
+        }
+    } else {
+        document.getElementById("login-elem").innerHTML = `
+            <a href="/login" class="nav__link" data-link>Loguj</a>
+            `;
+        document.getElementById("register-elem").innerHTML = `
+            <a href="/register" class="nav__link" data-link>Utwórz konto</a>
+            `;
     }
-;
-let setNormalBar = () => {
-        let nav = document.getElementById("nav");
-        nav.innerHTML = ""
-        nav.innerHTML = `<a href="/" class="nav__link" data-link>Dashboard</a>
-                    <a href="/settings" class="nav__link" data-link>About</a>
-                    <a href="/login" class="nav__link" data-link>Login</a>
-                    <a href="/register" class="nav__link" data-link>Register</a>`
-    }
-;
+};

@@ -1,7 +1,7 @@
 .obrazki {
     --grid-layout-gap: 10px;
-    --grid-column-count: 8; /* This gets overridden by an inline style. */
-    --grid-item--min-width: 320px; /* This gets overridden by an inline style. */
+    --grid-column-count: 8;
+    --grid-item--min-width: 320px;
 
 
     --gap-count: calc(var(--grid-column-count) - 1);
@@ -9,6 +9,8 @@
     --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
 
     display: grid;
+    place-items:  center;
+
     grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
     grid-gap: var(--grid-layout-gap);
 }

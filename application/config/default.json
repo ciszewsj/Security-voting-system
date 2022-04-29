@@ -11,5 +11,12 @@
   },
   "saltRounds": 10,
   "default_role": "User",
-  "access_token": "SecreteKey"
+  "access_token": "SecreteKey",
+  "secret_key": "SecreteKey",
+  "image_size": {
+    "min_width": 640,
+    "min_height": 480,
+    "max_width": 2560,
+    "max_height": 1440
+  }
 }

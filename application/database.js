@@ -68,7 +68,7 @@ class Database {
     }
 
     async getMyImageInfo(userid) {
-        let sql = `SELECT Id FROM images WHERE UserId = ${userid}`;
+        let sql = `SELECT Id, Title, Description, Active FROM images WHERE UserId = ${userid}`;
         return JSON.parse(JSON.stringify(await this.query(sql)))[0];
     }
 

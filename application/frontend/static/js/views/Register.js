@@ -1,10 +1,11 @@
 import AbstractView from "./AbstractView.js";
 import {addSession, getSession} from "../logic/CookieControler.mjs";
+import {navigateTo} from "../logic/reloadController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
         super(params);
-        this.setTitle("Posts")
+        this.setTitle("Utwórz konto")
     }
 
     async getHtml() {
@@ -79,7 +80,7 @@ let registerUser = async () => {
                 }).then(response => {
                     console.log(response)
                     if (response.status === "SUCCESS") {
-                        window.location.href = '/login';
+                        navigateTo("/login")
                         return;
                     } else if (response.status === "FAILURE") {
                         console.log(123)

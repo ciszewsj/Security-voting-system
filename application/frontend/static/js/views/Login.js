@@ -1,10 +1,12 @@
 import AbstractView from "./AbstractView.js";
 import {addSession, getSession} from "../logic/CookieControler.mjs";
+import {navigateTo} from "../logic/reloadController.mjs";
+import {checkIfLogin} from "../logic/SessionController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
         super(params);
-        this.setTitle("Posts")
+        this.setTitle("Logowanie")
     }
 
     async getHtml() {
@@ -75,7 +77,8 @@ let login = async () => {
                 }).then(response => {
                     if (response.status === "SUCCESS") {
                         addSession(response.body.token, response.body.name, response.body.role);
-                        window.location.href = '/';
+                        navigateTo("/");
+                        checkIfLogin();
                         return;
                     } else if (response.status === "FAILURE" || response.status === "UNAUTHORIZED") {
                         err_email.innerHTML = "";

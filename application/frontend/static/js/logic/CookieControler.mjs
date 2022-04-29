@@ -7,7 +7,7 @@ export function getSession() {
                 + new Date().toUTCString() + ";path=/");
         });
         removeSession();
-        return getSession();
+        return {token: ``, name: ``, role: ``};
     }
 }
 
