@@ -34,6 +34,10 @@ export default class extends AbstractView {
                     let div = document.createElement("a");
                     div.className = "post-box";
                     div.id = `post-box-${imagesInfo.body[i].ImageId}`;
+                    let liked = "";
+                    if (imagesInfo.body[i].Liked === `true`){
+                        liked = "liked";
+                    }
                     div.innerHTML = `
                                 <div class="image-box" id="image-box-${imagesInfo.body[i].ImageId}">
                                         <img id="image-${imagesInfo.body[i].ImageId}" alt="${imagesInfo.body[i].Title}"> 
@@ -44,7 +48,7 @@ export default class extends AbstractView {
                                                 <p>${imagesInfo.body[i].Author}</p>
                                             </div>
                                             <div class="like-box">
-                                                <div id="like-button-${imagesInfo.body[i].ImageId}" class="like-button">+</div>
+                                                <div id="like-button-${imagesInfo.body[i].ImageId}" class="like-button ${liked}">+</div>
                                     
                                                 <div class="like-number">
                                                     <p>${imagesInfo.body[i].Likes}</p>

@@ -77,9 +77,6 @@
     border: none;
 }
 
-.like-button:hover {
-    background-color: red;
-}
 
 .liked {
     color: red;

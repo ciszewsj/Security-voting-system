@@ -79,16 +79,22 @@ app.get('/api/removeImage/:id',
         try {
             let user = await database.getUserDataById(req.userid);
             if (user.role !== "Admin") {
-                if (await database.getMyImageInfo(user.Id) !== req.params.id) {
+                if (String((await database.getMyImageInfo(user.Id)).Id) !== req.params.id) {
                     return res.status(403).json(response.unauthorized_response({}));
                 }
             }
-            await database.removeImage(req.params.id);
-            return res.json(response.success_response({}));
+
+            if ((await database.getImageInfo(req.params.id)).Active === 0) {
+                await database.removeImage(req.params.id);
+                fs.unlinkSync("images/" + req.params.id + ".png")
+                return res.json(response.success_response({}));
+            }
+            return res.json(response.failure_response({msg: "Zdjęcie jest aktywne"}));
         } catch (e) {
             console.error(e);
             return res.status(500).json(response.internal_error_response({}));
         }
+        console.log(123)
     });
 
 app.post('/api/register',
@@ -254,10 +260,8 @@ app.post('/api/addImage',
         }
         try {
             try {
-                console.log()
-                await database.putImage(req.body.Title, req.body.Description, req.userid).Id;
+                await database.putImage(req.body.Title, req.body.Description, req.userid, config.get(`acceptImageAutomatically`));
             } catch (e) {
-                console.log("e.code");
                 if (e.code === "ER_DUP_ENTRY") {
                     return res.json(response.failure_response({"msg": "Użytkownik może umieścić tylko 1 obrazek"}));
                 } else {
@@ -283,18 +287,18 @@ app.get('/api/likeImage/:id',
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest nie aktywny bądź nie istnieje"}));
             }
             await database.likeImage(req.userid, req.params.id);
-            return req.json(response.success_response({}));
+            return res.json(response.success_response({}));
         } catch (e) {
             if (e.code === "ER_DUP_ENTRY") {
                 return res.status(400).json(response.failure_response({"msg": "Zdjęcie zostało już polubione"}));
             }
             console.error(e);
-            return req.status(500).json(response.internal_error_response({}));
+            return res.status(500).json(response.internal_error_response({}));
         }
     }
 );
 
-app.get('/api/unlikeImage/:imageId',
+app.get('/api/unlikeImage/:id',
     authenticateJWT,
     param('id').isNumeric(),
     async (req, res) => {
@@ -302,7 +306,7 @@ app.get('/api/unlikeImage/:imageId',
             if (!await database.ifImageActive(req.params.id)) {
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest nie aktywny bądź nie istnieje"}));
             }
-            await database.unLikeImage(req.params.id);
+            await database.unLikeImage(req.userid, req.params.id);
             return res.json(response.success_response({}));
         } catch (e) {
             console.error(e);
@@ -343,6 +347,7 @@ app.get('/api/getImageToAcceptList',
 
             }
             let imagesInfo = await database.getImagesInfo(null, false);
+            console.log(imagesInfo);
             return res.json(response.success_response(imagesInfo));
         } catch (e) {
             console.error(e);

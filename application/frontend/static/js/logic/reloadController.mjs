@@ -6,6 +6,7 @@ import Register from "../views/Register.js";
 import MyImageSite from "../views/MyImageSite.js";
 import ImagesToAccept from "../views/ImagesToAccept.js";
 import Logout from "../views/Logout.js";
+import {checkIfLogin} from "./SessionController.mjs";
 
 const pathToRegex = path => new RegExp("^" + path.replace(/\//g, "\\/").replace(/:\w+/g, "(.+)") + "$");
 
@@ -19,6 +20,7 @@ const getParams = match => {
 
 
 export const navigateTo = url => {
+    checkIfLogin();
     history.pushState(null, null, url);
     router();
 };
@@ -29,7 +31,6 @@ export const getView = () => {
 };
 
 export const router = async () => {
-    console.log(pathToRegex("/posts/:id"));
     const routes = [{
         path: "/", view: Dashboard
     }, {
@@ -45,7 +46,7 @@ export const router = async () => {
     }, {
         path: "/myimage", view: MyImageSite
     }, {
-        path: "/imageToAccept", view: ImagesToAccept
+        path: "/imagesToAccept", view: ImagesToAccept
     }]
 
 

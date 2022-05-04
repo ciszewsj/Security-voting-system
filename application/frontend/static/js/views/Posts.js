@@ -15,6 +15,9 @@ export default class extends AbstractView {
         <p>Description: </p>
         <p id="image-description"></p>   
         <img id="image-image" />
+        <button id="like-button" class="like-button">+</button>
+        <p>Likes:</p>
+        <p id="image-likes"></p>
         `;
     }
 
@@ -26,6 +29,10 @@ export default class extends AbstractView {
         let imageAuthor = document.getElementById("image-author");
         let imageDescription = document.getElementById("image-description");
         let imageImage = document.getElementById("image-image");
+        let imageLikes = document.getElementById("image-likes");
+        let imageButtonLike = document.getElementById("like-button");
+
+
         fetch(`/api/getImagesInfo`,
             {
                 headers: {
@@ -36,20 +43,62 @@ export default class extends AbstractView {
             }).then(response => {
             return response.json();
         }).then(response => {
-                console.log(response)
                 let imageInfo = response.body.find((post, index) => {
                     if (`${post.ImageId}` === `${href}`)
                         return true;
                 });
                 if (imageInfo === undefined) {
-                    console.log("here");
-                   // document.location.href = "/";
                     return;
                 }
                 this.setTitle(imageInfo.Title);
                 imageTitle.innerText = imageInfo.Title;
                 imageAuthor.innerText = imageInfo.Author;
                 imageDescription.innerText = imageInfo.Description;
+                imageLikes.innerText = imageInfo.Likes;
+                let liked = imageInfo.Liked;
+                if (liked === "true") {
+                    imageButtonLike.className = "like-button liked";
+                }
+                imageButtonLike.addEventListener("click", () => {
+                    if (liked === "true") {
+                        fetch(`/api/unlikeImage/${imageInfo.ImageId}`,
+                            {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'authorization': `${token}`
+                                }
+                            })
+                            .then(response => {
+                                return response.json();
+                            }).then(response => {
+                            if (response.status === "SUCCESS") {
+                                imageButtonLike.className = "like-button";
+                                imageLikes.innerText = String(parseInt(imageLikes.innerText) - 1);
+                                liked = `false`;
+                            }
+                        })
+                    } else {
+                        fetch(`/api/likeImage/${imageInfo.ImageId}`,
+                            {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'authorization': `${token}`
+                                }
+                            })
+                            .then(response => {
+                                return response.json();
+                            }).then(response => {
+                            if (response.status === "SUCCESS") {
+                                imageButtonLike.className = "like-button liked";
+                                imageLikes.innerText = String(parseInt(imageLikes.innerText) + 1);
+                                liked = `true`;
+                            }
+                        })
+                    }
+                });
+
 
                 fetch(`/api/getImage/${imageInfo.ImageId}`)
                     .then(img => {

@@ -31,7 +31,7 @@ export default class extends AbstractView {
     async addLogic() {
         let token = getSession().token;
         if (token.length !== 0) {
-            window.location.href = '/';
+            navigateTo('/');
             return;
         }
         document.addEventListener("keydown", registerByEnter);

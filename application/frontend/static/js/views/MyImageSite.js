@@ -40,12 +40,9 @@ export default class extends AbstractView {
             imageCase(response, token);
         });
     };
-
-    async removeLogic() {
-        return super.removeLogic();
-    };
 }
 let imageCase = (response, token) => {
+    console.log(response)
     let elem = document.getElementById("myImageBar");
     elem.innerHTML = `
             <div>
@@ -83,9 +80,9 @@ let imageCase = (response, token) => {
         if (response.body.Active !== 1) {
             document.getElementById("remove-image-place").innerHTML =
                 `<button id="remove-image">Usuń zdjęcie</button>`;
-            let removeButton = document.getElementById("remove-image")
+            let removeButton = document.getElementById("remove-image");
             removeButton.addEventListener('click', async () => {
-                fetch(`/api/removeImage/${response.Id}`, {
+                fetch(`/api/removeImage/${response.body.Id}`, {
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
@@ -95,7 +92,7 @@ let imageCase = (response, token) => {
                     return response.json();
                 }).then(response => {
                     if (response.status === "SUCCESS") {
-                        window.location.reload();
+                        navigateTo(window.location);
                     }
                 });
             });
@@ -150,7 +147,7 @@ let noImageCase = (token) => {
         }).then(response => {
             console.log(response)
             if (response.status === "SUCCESS") {
-                window.location.reload();
+                navigateTo(window.location);
             } else if (response.status === "FAILURE" || response.status === "UNAUTHORIZED") {
                 title_error.innerHTML = "";
                 description_error.innerHTML = "";

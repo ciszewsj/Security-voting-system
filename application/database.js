@@ -61,14 +61,26 @@ class Database {
         return JSON.parse(JSON.stringify(await this.query(sql)));
     }
 
-    async putImage(title, description, userid) {
+    async putImage(title, description, userid, active) {
         let sql = `INSERT INTO images(Title, Description, UserId, Active)  
-                VALUES ("${title}", "${description}", ${userid}, true)`;
+                VALUES ("${title}", "${description}", ${userid}, ${active})`;
         await this.query(sql);
     }
 
     async getMyImageInfo(userid) {
-        let sql = `SELECT Id, Title, Description, Active FROM images WHERE UserId = ${userid}`;
+        let sql = `SELECT i.Id, i.Title, i.Description, i.Active, l.numberOfLikes
+            FROM images i
+            LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes GROUP BY ImageId) l ON l.ImageId = i.Id
+            WHERE UserId = ${userid}`;
+        return JSON.parse(JSON.stringify(await this.query(sql)))[0];
+    }
+
+    async getImageInfo(imageId) {
+        let sql = `SELECT i.Id, i.Title, i.Description, i.Active, u.Name, l.numberOfLikes
+            FROM images i 
+            LEFT JOIN users u ON i.UserId = u.id
+            LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes GROUP BY ImageId) l ON l.ImageId = i.Id
+            WHERE i.id = ${imageId}`;
         return JSON.parse(JSON.stringify(await this.query(sql)))[0];
     }
 

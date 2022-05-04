@@ -20,7 +20,7 @@ const checkUserDataJWT = (req, res, next) => {
     if (token) {
         jwt.verify(token, "1222", (err, user) => {
             if (!err) {
-                req.userid = user;
+                req.userid = user.id;
             }
         });
     }

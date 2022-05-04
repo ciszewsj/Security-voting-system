@@ -30,25 +30,41 @@ export default class extends AbstractView {
         if (imagesInfo.status === "SUCCESS") {
             document.getElementById("image-grid").innerHTML = "";
             for (let i in imagesInfo.body) {
-                document.getElementById("image-grid").innerHTML += `
+                let newImage = document.createElement("a");
+                newImage.className = "post-box";
+                newImage.id = `post-box-${imagesInfo.body[i].ImageId}`;
+                newImage.href = `/imageToAccept/${imagesInfo.body[i].ImageId}`;
+                newImage.innerHTML = `
+                        <div class="image-box" id="image-box-${imagesInfo.body[i].ImageId}">
                         
-                        <div class="post-box" id="post-box-${imagesInfo.body[i].ImageId}">
-                                    <div class="image-box" id="image-box-${imagesInfo.body[i].ImageId}">
-                                    
-                                                <img id="image-${imagesInfo.body[i].ImageId}" alt="${imagesInfo.body[i].Title}"> 
-                                            </div>
-                                            <div class="info-box">
-                                                <div class="description-box">
-                                                    <p>${imagesInfo.body[i].Title}</p>
-                                                    <p>${imagesInfo.body[i].Author}</p>
-                                                </div>
-                                                <div class="accept-box">
-                                                    <button id=accept-button-${imagesInfo.body[i].ImageId}" class="like-button">Accept</button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <img id="image-${imagesInfo.body[i].ImageId}" alt="${imagesInfo.body[i].Title}"> 
+                                </div>
+                                <div class="info-box">
+                                    <div class="description-box">
+                                        <p>${imagesInfo.body[i].Title}</p>
+                                        <p>${imagesInfo.body[i].Author}</p>
+                                    </div>
+                                </div>
                         `;
+                document.getElementById("image-grid").appendChild(newImage);
+                this.getImage(imagesInfo.body[i].ImageId);
+
             }
+        }
+    }
+
+    async getImage(imageId) {
+        try {
+            let img = document.getElementById(`image-${imageId}`);
+            let response = await fetch(`/api/getImage/${imageId}`);
+            if (response.status === 200) {
+                let blob = await response.blob();
+                img.src = URL.createObjectURL(blob);
+            } else {
+                console.log("error loading image");
+            }
+        } catch (e) {
+            console.log(e);
         }
     }
 }

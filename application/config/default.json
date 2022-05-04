@@ -18,5 +18,6 @@
     "min_height": 480,
     "max_width": 2560,
     "max_height": 1440
-  }
+  },
+  "acceptImageAutomatically": false
 }
