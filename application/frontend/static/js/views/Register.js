@@ -1,6 +1,7 @@
 import AbstractView from "./AbstractView.js";
-import {addSession, getSession} from "../logic/CookieControler.mjs";
-import {navigateTo} from "../logic/reloadController.mjs";
+import {addSession, getSession} from "../logic/StorageControler.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
+import {addError} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -78,7 +79,6 @@ let registerUser = async () => {
                 response => {
                     return response.json();
                 }).then(response => {
-                    console.log(response)
                     if (response.status === "SUCCESS") {
                         navigateTo("/login")
                         return;
@@ -114,7 +114,7 @@ let registerUser = async () => {
             )
         } catch
             (e) {
-            console.error(e);
+            addError(e);
         }
     }
 ;

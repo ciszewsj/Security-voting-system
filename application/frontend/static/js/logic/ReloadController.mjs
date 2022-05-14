@@ -5,6 +5,7 @@ import Login from "../views/Login.js";
 import Register from "../views/Register.js";
 import MyImageSite from "../views/MyImageSite.js";
 import ImagesToAccept from "../views/ImagesToAccept.js";
+import ImageToAccept from "../views/ImageToAccept.js";
 import Logout from "../views/Logout.js";
 import {checkIfLogin} from "./SessionController.mjs";
 
@@ -47,6 +48,8 @@ export const router = async () => {
         path: "/myimage", view: MyImageSite
     }, {
         path: "/imagesToAccept", view: ImagesToAccept
+    }, {
+        path: "/imageToAccept/:id", view: ImageToAccept
     }]
 
 

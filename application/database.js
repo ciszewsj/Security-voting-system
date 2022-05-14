@@ -68,7 +68,7 @@ class Database {
     }
 
     async getMyImageInfo(userid) {
-        let sql = `SELECT i.Id, i.Title, i.Description, i.Active, l.numberOfLikes
+        let sql = `SELECT i.Id, i.Title, i.Description, i.Active, IFNULL(l.numberOfLikes,0) as Likes
             FROM images i
             LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes GROUP BY ImageId) l ON l.ImageId = i.Id
             WHERE UserId = ${userid}`;
@@ -76,12 +76,17 @@ class Database {
     }
 
     async getImageInfo(imageId) {
-        let sql = `SELECT i.Id, i.Title, i.Description, i.Active, u.Name, l.numberOfLikes
+        let sql = `SELECT i.Id, i.Title, i.Description, i.Active, u.Name, IFNULL(l.numberOfLikes,0) as Likes
             FROM images i 
             LEFT JOIN users u ON i.UserId = u.id
             LEFT JOIN (SELECT ImageId, COUNT(*) AS numberOfLikes FROM likes GROUP BY ImageId) l ON l.ImageId = i.Id
             WHERE i.id = ${imageId}`;
         return JSON.parse(JSON.stringify(await this.query(sql)))[0];
+    }
+
+    async getRawImageInfo(imageId) {
+        let sql = `SELECT * FROM images WHERE Id = "${imageId}"`;
+        return JSON.parse(JSON.stringify(await this.query(sql)));
     }
 
     async removeImage(imageId) {
@@ -110,6 +115,22 @@ class Database {
         let sql = `SELECT * FROM images WHERE id = "${imageId}" AND Active = ${status}`;
         let images = await this.query(sql);
         return images.length === 1;
+    }
+
+    async addInfo(userId, info) {
+        let sql = `INSERT INTO info(UserId, Info)  
+                VALUES ("${userId}", "${info}")`;
+        await this.query(sql);
+    }
+
+    async getInfo(userid) {
+        let sql = `SELECT * FROM info WHERE UserId = "10"`;
+        return await this.query(sql);
+    }
+
+    async removeInfo(id, userid) {
+        let sql = `DELETE FROM info WHERE Id = "${id}" AND UserId = "${userid}"`;
+        await this.query(sql);
     }
 }
 

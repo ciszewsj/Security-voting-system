@@ -1,6 +1,7 @@
 import AbstractView from "./AbstractView.js";
-import {getSession} from "../logic/CookieControler.mjs";
-import {navigateTo} from "../logic/reloadController.mjs";
+import {getSession} from "../logic/StorageControler.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
+import {addError} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -29,13 +30,19 @@ export default class extends AbstractView {
                 }
             })).json();
             if (imagesInfo.status === "SUCCESS") {
+                imagesInfo.body = imagesInfo.body.sort((a, b) => {
+                    if (a.Likes >= b.Likes) {
+                        return -1;
+                    }
+                    return 1;
+                });
                 document.getElementById("image-grid").innerHTML = "";
                 for (let i in imagesInfo.body) {
                     let div = document.createElement("a");
                     div.className = "post-box";
                     div.id = `post-box-${imagesInfo.body[i].ImageId}`;
                     let liked = "";
-                    if (imagesInfo.body[i].Liked === `true`){
+                    if (imagesInfo.body[i].Liked === `true`) {
                         liked = "liked";
                     }
                     div.innerHTML = `
@@ -64,9 +71,11 @@ export default class extends AbstractView {
                     this.getImage(imagesInfo.body[i].ImageId);
                 }
 
+            } else {
+                addError(imagesInfo.body.msg);
             }
         } catch (e) {
-            console.log(e);
+            addError(e);
         }
 
     }
@@ -79,10 +88,10 @@ export default class extends AbstractView {
                 let blob = await response.blob();
                 img.src = URL.createObjectURL(blob);
             } else {
-                console.log("error loading image");
+                addError(response.body.msg);
             }
         } catch (e) {
-            console.log(e);
+            addError(e);
         }
     }
 }

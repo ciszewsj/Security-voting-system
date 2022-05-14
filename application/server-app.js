@@ -78,15 +78,24 @@ app.get('/api/removeImage/:id',
     async (req, res) => {
         try {
             let user = await database.getUserDataById(req.userid);
-            if (user.role !== "Admin") {
+            if (user.Role !== "Admin") {
                 if (String((await database.getMyImageInfo(user.Id)).Id) !== req.params.id) {
                     return res.status(403).json(response.unauthorized_response({}));
                 }
             }
-
-            if ((await database.getImageInfo(req.params.id)).Active === 0) {
+            let info = (await database.getRawImageInfo(req.params.id))[0];
+            console.log(info);
+            if (info.Active === 0) {
+                console.log(info);
                 await database.removeImage(req.params.id);
                 fs.unlinkSync("images/" + req.params.id + ".png")
+                if (user.Role === "Admin") {
+                    try {
+                        await database.addInfo(info.UserId, "Twój obrazek został usunięty przez administratora");
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
                 return res.json(response.success_response({}));
             }
             return res.json(response.failure_response({msg: "Zdjęcie jest aktywne"}));
@@ -94,7 +103,6 @@ app.get('/api/removeImage/:id',
             console.error(e);
             return res.status(500).json(response.internal_error_response({}));
         }
-        console.log(123)
     });
 
 app.post('/api/register',
@@ -225,10 +233,6 @@ app.get('/api/checkStatus',
     }
 );
 
-app.get('/api/logout', async (req, res) => {
-    }
-);
-
 app.post('/api/addImage',
     authenticateJWT,
     body('Title')
@@ -246,19 +250,19 @@ app.post('/api/addImage',
         if (!errors.isEmpty()) {
             return res.status(400).json(response.failure_response({errors: errors.array()}));
         }
-        let img = Buffer.from(req.body.Image.split(';base64,').pop(), 'base64');
-        let dimensions = sizeOf(img);
-        let configDim = config.get('image_size');
-        if (dimensions.width < configDim.get("min_width") || dimensions.width > configDim.get("max_width") ||
-            dimensions.height < configDim.get("min_height") || dimensions.height > configDim.get("max_height")) {
-            return res.status(400).json(response.failure_response({
-                errors: [{
-                    "msg": `Akceptowalny rozmiar zdjęcia to ${configDim.get("min_width")}x${configDim.get("min_height")} - ${configDim.get("max_width")}x${configDim.get("max_height")}`,
-                    "param": "Image",
-                }]
-            }));
-        }
         try {
+            let img = Buffer.from(req.body.Image.split(';base64,').pop(), 'base64');
+            let dimensions = sizeOf(img);
+            let configDim = config.get('image_size');
+            if (dimensions.width < configDim.get("min_width") || dimensions.width > configDim.get("max_width") ||
+                dimensions.height < configDim.get("min_height") || dimensions.height > configDim.get("max_height")) {
+                return res.status(400).json(response.failure_response({
+                    errors: [{
+                        "msg": `Akceptowalny rozmiar zdjęcia to ${configDim.get("min_width")}x${configDim.get("min_height")} - ${configDim.get("max_width")}x${configDim.get("max_height")}`,
+                        "param": "Image",
+                    }]
+                }));
+            }
             try {
                 await database.putImage(req.body.Title, req.body.Description, req.userid, config.get(`acceptImageAutomatically`));
             } catch (e) {
@@ -283,6 +287,10 @@ app.get('/api/likeImage/:id',
     param('id').isNumeric(),
     async (req, res) => {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json(response.failure_response({errors: errors.array()}));
+            }
             if (!await database.ifImageActive(req.params.id)) {
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest nie aktywny bądź nie istnieje"}));
             }
@@ -303,6 +311,10 @@ app.get('/api/unlikeImage/:id',
     param('id').isNumeric(),
     async (req, res) => {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json(response.failure_response({errors: errors.array()}));
+            }
             if (!await database.ifImageActive(req.params.id)) {
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest nie aktywny bądź nie istnieje"}));
             }
@@ -320,15 +332,25 @@ app.get('/api/acceptImage/:id',
     param('id').isNumeric(),
     async (req, res) => {
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json(response.failure_response({errors: errors.array()}));
+            }
             let user = await database.getUserDataById(req.userid);
-            if (user.role !== "Admin") {
+            if (user.Role !== "Admin") {
                 return res.status(403).json(response.unauthorized_response({}));
             }
             if (!await database.ifImageActive(req.params.id, false)) {
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest już aktywny, bądź nie istnieje"}));
             }
             await database.acceptImage(req.params.id);
-            req.json(response.success_response());
+            let imageInfo = (await database.getRawImageInfo(req.params.id))[0];
+            try {
+                await database.addInfo(imageInfo.UserId, "Twój obrazek został zaakceptowany przez administratora");
+            } catch (e) {
+                console.error(e);
+            }
+            res.json(response.success_response());
         } catch (e) {
             console.error(e);
             return res.status(500).json(response.internal_error_response({}));
@@ -336,19 +358,68 @@ app.get('/api/acceptImage/:id',
     }
 );
 
-app.get('/api/getImageToAcceptList',
+app.get('/api/getImagesToAcceptList',
     authenticateJWT,
     async (req, res) => {
         try {
             let user = await database.getUserDataById(req.userid);
-            console.log(user.Role);
             if (user.Role !== "Admin") {
                 return res.status(403).json(response.unauthorized_response({}));
-
             }
             let imagesInfo = await database.getImagesInfo(null, false);
-            console.log(imagesInfo);
             return res.json(response.success_response(imagesInfo));
+        } catch (e) {
+            console.error(e);
+            return res.status(500).json(response.internal_error_response());
+        }
+    }
+);
+
+app.get('/api/getImageToAccept/:id',
+    authenticateJWT,
+    param('id').isNumeric(),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json(response.failure_response({errors: errors.array()}));
+            }
+            let user = await database.getUserDataById(req.userid);
+            if (user.Role !== "Admin") {
+                return res.status(403).json(response.unauthorized_response({}));
+            }
+            let imagesInfo = await database.getImageInfo(req.params.id);
+            return res.json(response.success_response(imagesInfo));
+        } catch (e) {
+            console.error(e);
+            return res.status(500).json(response.internal_error_response());
+        }
+    }
+);
+
+app.get('/api/userinfo/getInfoList',
+    authenticateJWT,
+    async (req, res) => {
+        try {
+            let info = (await database.getInfo(req.userid));
+            return res.json(response.success_response(info));
+        } catch (e) {
+            console.error(e);
+            return res.status(500).json(response.internal_error_response());
+        }
+    }
+);
+
+app.get('/api/userinfo/removeInfoElement/:id',
+    authenticateJWT,
+    param('id').isNumeric(),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json(response.failure_response({errors: errors.array()}));
+            }
+            return res.json(response.success_response(await database.removeInfo(req.params.id, req.userid)));
         } catch (e) {
             console.error(e);
             return res.status(500).json(response.internal_error_response());

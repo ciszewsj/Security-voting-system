@@ -1,5 +1,7 @@
 import AbstractView from "./AbstractView.js";
-import {getSession} from "../logic/CookieControler.mjs";
+import {getSession} from "../logic/StorageControler.mjs";
+import {addError} from "../logic/ErrorController.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -10,14 +12,25 @@ export default class extends AbstractView {
     async getHtml() {
         return `
         <h1 id="image-title"></h1>
-        <p>Autor: </p>
-        <p id="image-author"></p>   
-        <p>Description: </p>
-        <p id="image-description"></p>   
-        <img id="image-image" />
-        <button id="like-button" class="like-button">+</button>
-        <p>Likes:</p>
-        <p id="image-likes"></p>
+        <div class="image-box-info">
+        <div class="image-full-screen">   
+            <img id="image-image" />
+        </div>
+        
+            <div class="info-grid">
+                <div>
+                    <p>Autor: </p>
+                    <p id="image-author"></p>
+                </div>
+                <div>
+                    <button id="like-button" class="like-button">+</button>
+                    <p class="p">Polubienia:</p>
+                    <p id="image-likes" class="p"></p>
+                </div>
+            </div>  
+            <p>Opis: </p>
+            <p id="image-description" class="description"></p>
+        </div>
         `;
     }
 
@@ -48,6 +61,8 @@ export default class extends AbstractView {
                         return true;
                 });
                 if (imageInfo === undefined) {
+                    addError("Zdjęcie nie zostało znalezione");
+                    navigateTo("/");
                     return;
                 }
                 this.setTitle(imageInfo.Title);
@@ -76,8 +91,12 @@ export default class extends AbstractView {
                                 imageButtonLike.className = "like-button";
                                 imageLikes.innerText = String(parseInt(imageLikes.innerText) - 1);
                                 liked = `false`;
+                            } else {
+                                addError(response.body.msg);
                             }
-                        })
+                        }).catch(e => {
+                            addError(e);
+                        });
                     } else {
                         fetch(`/api/likeImage/${imageInfo.ImageId}`,
                             {
@@ -94,8 +113,12 @@ export default class extends AbstractView {
                                 imageButtonLike.className = "like-button liked";
                                 imageLikes.innerText = String(parseInt(imageLikes.innerText) + 1);
                                 liked = `true`;
+                            } else {
+                                addError(response.body.msg);
                             }
-                        })
+                        }).catch(e => {
+                            addError(e);
+                        });
                     }
                 });
 
@@ -107,11 +130,15 @@ export default class extends AbstractView {
                                 imageImage.src = URL.createObjectURL(blob);
                             });
                         } else {
-                            console.log("error loading image");
+                            addError(response.body.msg);
                         }
-                    });
+                    }).catch(e => {
+                    addError(e);
+                });
 
             }
-        )
+        ).catch(e => {
+            addError(e);
+        });
     }
 }

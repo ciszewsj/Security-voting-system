@@ -1,6 +1,7 @@
 import AbstractView from "./AbstractView.js";
-import {getSession} from "../logic/CookieControler.mjs";
-import {navigateTo} from "../logic/reloadController.mjs";
+import {getSession} from "../logic/StorageControler.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
+import {addError} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -10,7 +11,7 @@ export default class extends AbstractView {
 
     async getHtml() {
         return `
-        <h1>Moje zdjęcie</h1>
+        <h1>Mój obrazek</h1>
         <div id="myImageBar"></div>
         `;
     };
@@ -38,34 +39,44 @@ export default class extends AbstractView {
                 return;
             }
             imageCase(response, token);
+        }).catch(e => {
+            addError(e);
         });
     };
 }
 let imageCase = (response, token) => {
-    console.log(response)
     let elem = document.getElementById("myImageBar");
-    elem.innerHTML = `
-            <div>
-                <p>Tytuł :</p>
-                <p id="title-my-image"></p>
-                <p>Opis :</p>
-                <p id="description-my-image"></p>
-                <p>Obraz :</p>
-                <div>
-                  <img id="image-my-image"/>
-                </div>
-                <div id="remove-image-place">
-                </div>
-                
+    elem.innerHTML = `        
+            <h2 id="title-my-image"></h2>
+            <div class="image-box-info">
+            <div class="image-full-screen">   
+                <img id="image-my-image" />
+            </div>
+            
+                <div class="info-grid">
+                    <div>
+                        <p>Autor: </p>
+                        <p id="image-author"></p>
+                    </div>
+                    <div id="action-place">
+                        <button id="like-button" class="like-button">+</button>
+                        <p class="p">Likes:</p>
+                        <p id="image-likes" class="p"></p>
+                    </div>
+                </div>  
+                <p>Opis: </p>
+                <p id="description-my-image" class="description"></p>
             </div>
             `
     if (response.status === "SUCCESS") {
         let title = document.getElementById("title-my-image");
         let description = document.getElementById("description-my-image");
         let image = document.getElementById("image-my-image");
+        let author = document.getElementById("image-author");
 
         title.textContent = response.body.Title;
         description.textContent = response.body.Description;
+        author.textContent = getSession().name + " (Ty)";
 
         fetch(`/api/getImage/${response.body.Id}`)
             .then(img => {
@@ -74,12 +85,18 @@ let imageCase = (response, token) => {
                         image.src = URL.createObjectURL(blob);
                     });
                 } else {
-                    console.log("error loading image");
+                    addError(img.body.msg);
                 }
-            });
+            }).catch(e => {
+            addError(e);
+        });
+        let actionPlace = document.getElementById("action-place");
         if (response.body.Active !== 1) {
-            document.getElementById("remove-image-place").innerHTML =
-                `<button id="remove-image">Usuń zdjęcie</button>`;
+            actionPlace.innerHTML =
+                `<button id="remove-image" class="like-button">Usuń zdjęcie</button>
+                <p>Twoje zdjęcie jest niezaakceptowane</p>
+
+                `;
             let removeButton = document.getElementById("remove-image");
             removeButton.addEventListener('click', async () => {
                 fetch(`/api/removeImage/${response.body.Id}`, {
@@ -93,9 +110,22 @@ let imageCase = (response, token) => {
                 }).then(response => {
                     if (response.status === "SUCCESS") {
                         navigateTo(window.location);
+                    } else {
+                        addError(response.body.msg);
                     }
-                });
+                })
+                    .catch(e => {
+                        addError(e);
+                    });
             });
+
+        } else if (response.body.Active === 1) {
+            actionPlace.innerHTML = `
+                <p>Polubienia:</p>
+                <p id="image-likes" class="p"></p>
+            `;
+            let likes = document.getElementById("image-likes");
+            likes.textContent = response.body.Likes;
         }
     }
 };
@@ -116,7 +146,6 @@ let noImageCase = (token) => {
         <button id="submit-image">Wyślij</button>`;
     document.getElementById("submit-image").addEventListener("click", async () => {
         let file = document.getElementById("image-image").files[0];
-        console.log(file);
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -154,7 +183,6 @@ let noImageCase = (token) => {
                 image_error.innerHTML = "";
                 for (let i in response.body.errors) {
                     let err = response.body.errors[i];
-                    console.log(err)
                     switch (err.param) {
                         case 'Image':
                             image_error.innerHTML = `<label>${err.msg}</label>`
@@ -168,6 +196,8 @@ let noImageCase = (token) => {
                     }
                 }
             }
+        }).catch(e => {
+            addError(e);
         });
     });
 }

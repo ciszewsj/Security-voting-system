@@ -1,5 +1,7 @@
 import AbstractView from "./AbstractView.js";
-import {getSession} from "../logic/CookieControler.mjs";
+import {getSession} from "../logic/StorageControler.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
+import {addError} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -19,21 +21,22 @@ export default class extends AbstractView {
 
     async addLogic() {
         let token = getSession().token;
-        let imagesInfo = await (await fetch('/api/getImageToAcceptList', {
+        let imagesInfo = await (await fetch('/api/getImagesToAcceptList', {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'authorization': `${token}`
             }
+        }).catch(e => {
+            addError(e);
+            return undefined;
         })).json();
-        console.log(imagesInfo);
         if (imagesInfo.status === "SUCCESS") {
             document.getElementById("image-grid").innerHTML = "";
             for (let i in imagesInfo.body) {
                 let newImage = document.createElement("a");
                 newImage.className = "post-box";
                 newImage.id = `post-box-${imagesInfo.body[i].ImageId}`;
-                newImage.href = `/imageToAccept/${imagesInfo.body[i].ImageId}`;
                 newImage.innerHTML = `
                         <div class="image-box" id="image-box-${imagesInfo.body[i].ImageId}">
                         
@@ -47,9 +50,15 @@ export default class extends AbstractView {
                                 </div>
                         `;
                 document.getElementById("image-grid").appendChild(newImage);
+                document.getElementById(`post-box-${imagesInfo.body[i].ImageId}`)
+                    .addEventListener("click", (e) => {
+                        navigateTo(`/imageToAccept/${imagesInfo.body[i].ImageId}`);
+                    });
                 this.getImage(imagesInfo.body[i].ImageId);
 
             }
+        } else if (imagesInfo === undefined) {
+            addError(imagesInfo.body.msg);
         }
     }
 
@@ -61,10 +70,10 @@ export default class extends AbstractView {
                 let blob = await response.blob();
                 img.src = URL.createObjectURL(blob);
             } else {
-                console.log("error loading image");
+                addError(response.body.msg);
             }
         } catch (e) {
-            console.log(e);
+            addError(e);
         }
     }
 }

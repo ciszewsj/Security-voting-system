@@ -1,9 +1,16 @@
-import {checkIfLogin} from "./logic/SessionController.mjs";
-import {getView, navigateTo, router} from "./logic/reloadController.mjs";
+import {checkIfLogin, setNavBar} from "./logic/SessionController.mjs";
+import {getView, navigateTo, router} from "./logic/ReloadController.mjs";
+import {getSession} from "./logic/StorageControler.mjs";
+import {addServerInfo} from "./logic/ErrorController.mjs";
+
 
 checkIfLogin();
-window.setInterval(checkIfLogin, 10000);
 
+if (getSession().token.length !== 0) {
+    addServerInfo();
+}
+
+window.setInterval(checkIfLogin, 10000);
 
 window.addEventListener("popstate", router);
 

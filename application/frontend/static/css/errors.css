@@ -1,0 +1,47 @@
+.info-box-error-view {
+    width: 90%;
+    margin: 10px;
+    padding: 10px;
+    border-style: solid;
+    border-color: black;
+    border-radius: 10px;
+}
+
+.error-box-error {
+    background-color: rgba(255, 0, 0, 0.2);
+    border-color: red;
+}
+
+.error-box-error:hover, .error-box-error:focus {
+    background-color: rgba(255, 0, 0, 0.4);
+}
+
+.error-box-error:active {
+    background-color: rgba(255, 0, 0, 0.6);
+}
+
+.info-box-error {
+    background-color: rgba(255, 165, 0, 0.2);
+    border-color: orange;
+}
+
+.info-box-error:hover, .info-box-error:focus {
+    background-color: rgba(255, 165, 0, 0.4);
+}
+
+.info-box-error:active {
+    background-color: rgba(255, 165, 0, 0.6);
+}
+
+.server-box-error {
+    background-color: rgba(173, 216, 230, 0.2);
+    border-color: lightblue;
+}
+
+.server-box-error:hover, .server-box-error:focus {
+    background-color: rgba(173, 216, 230, 0.4);
+}
+
+.server-box-error:active {
+    background-color: rgba(173, 216, 230, 0.6);
+}

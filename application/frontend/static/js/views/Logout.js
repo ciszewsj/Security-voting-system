@@ -1,7 +1,7 @@
 import AbstractView from "./AbstractView.js";
-import {removeSession} from "../logic/CookieControler.mjs";
-import {navigateTo} from "../logic/reloadController.mjs";
-import {checkIfLogin} from "../logic/SessionController.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
+import {checkIfLogin, logout} from "../logic/SessionController.mjs";
+import {clearErrors} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -15,8 +15,9 @@ export default class extends AbstractView {
     };
 
     async addLogic() {
-        removeSession();
+        logout();
         navigateTo("/");
         checkIfLogin();
+        clearErrors();
     };
 }

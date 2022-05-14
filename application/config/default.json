@@ -13,6 +13,7 @@
   "default_role": "User",
   "access_token": "SecreteKey",
   "secret_key": "SecreteKey",
+  "secret_key_jwt": "1222",
   "image_size": {
     "min_width": 640,
     "min_height": 480,

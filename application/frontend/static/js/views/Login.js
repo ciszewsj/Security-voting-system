@@ -1,7 +1,8 @@
 import AbstractView from "./AbstractView.js";
-import {addSession, getSession} from "../logic/CookieControler.mjs";
-import {navigateTo} from "../logic/reloadController.mjs";
+import {addSession, getSession} from "../logic/StorageControler.mjs";
+import {navigateTo} from "../logic/ReloadController.mjs";
 import {checkIfLogin} from "../logic/SessionController.mjs";
+import {addError, addServerInfo} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -37,12 +38,6 @@ export default class extends AbstractView {
         let button = document.getElementById(`login-button`);
         button.addEventListener("click", login);
     };
-
-    async removeLogic() {
-        document.removeEventListener("keydown", loginByEnter);
-        let button = document.getElementById(`login-button`);
-        button.removeEventListener("click", login);
-    }
 }
 
 let loginByEnter = async (e) => {
@@ -79,6 +74,7 @@ let login = async () => {
                         addSession(response.body.token, response.body.name, response.body.role);
                         navigateTo("/");
                         checkIfLogin();
+                        addServerInfo();
                         return;
                     } else if (response.status === "FAILURE" || response.status === "UNAUTHORIZED") {
                         err_email.innerHTML = "";
@@ -103,10 +99,12 @@ let login = async () => {
                         return;
                     }
                 }
-            )
+            ).catch(e => {
+                addError(e)
+            });
         } catch
             (e) {
-            console.error(e);
+            addError(e);
         }
     }
 ;

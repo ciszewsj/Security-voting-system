@@ -1,4 +1,5 @@
-import {getSession, removeSession} from "./CookieControler.mjs";
+import {getSession, removeSession} from "./StorageControler.mjs";
+import {addError, addInfo} from "./ErrorController.mjs";
 
 export let checkIfLogin = async () => {
     let token;
@@ -9,7 +10,15 @@ export let checkIfLogin = async () => {
         }
     } catch (e) {
         removeSession();
+        checkIfLogin();
     }
+}
+
+let logged = false;
+
+export let logout = () => {
+    removeSession();
+    logged = false;
 }
 
 let checkIfLoggedIn = async (token) => {
@@ -26,22 +35,24 @@ let checkIfLoggedIn = async (token) => {
         }
     ).then((json) => {
         if (json.body.status === true) {
-        } else if (json.body.status === false) {
-            removeSession();
+            logged = true;
         } else {
-            console.error("navbarError???");
+            if (logged === true) {
+                addInfo("Sesja wygasła");
+            }
+            logged = false;
             removeSession();
         }
         setNavBar();
     })
         .catch(e => {
-            console.log(e);
+            addError(e);
         })
 
 }
 
 
-let setNavBar = () => {
+export let setNavBar = () => {
     let nav = document.getElementById("nav");
     nav.innerHTML = `<a href="/" class="nav__link" data-link>Obrazki</a>
                     <div id="my-image-elem"></div>
@@ -59,7 +70,7 @@ let setNavBar = () => {
         `;
         if (getSession().role === "Admin") {
             document.getElementById("accept-image-elem").innerHTML = `
-                <a href="/imageToAccept" class="nav__link" data-link>Niezaakceptowane</a>
+                <a href="/imagesToAccept" class="nav__link" data-link>Niezaakceptowane</a>
             `;
         }
     } else {
