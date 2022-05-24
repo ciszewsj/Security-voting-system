@@ -5,6 +5,10 @@ body {
     font-size: 18px;
 }
 
+p {
+    text-align: justify;
+}
+
 .nav {
     position: fixed;
     top: 0;
@@ -24,6 +28,12 @@ body {
 
 .nav__link:hover {
     background: rgba(255, 255, 255, 0.05);
+    color: #eeeeee;
+}
+
+.nav__link:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #eeeeee;
 }
 
 #app {
@@ -32,6 +42,50 @@ body {
     font-weight: 500;
 }
 
-a {
-    color: #009579;
+
+@media screen and (min-width: 350px) and (max-width: 600px) {
+    body {
+        --nav-height: 50px;
+        margin: var(--nav-height) 0 0 0;
+        font-family: 'Quicksand', sans-serif;
+        font-size: 18px;
+    }
+
+    .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: var(--nav-height);
+        background: #222222;
+        white-space: nowrap;
+        text-align: center;
+
+        --grid-layout-gap: 5px;
+        --grid-column-count: 6;
+        --grid-item--min-width: 60px;
+
+
+        --gap-count: calc(var(--grid-column-count) - 1);
+        --total-gap-width: calc(var(--gap-count) * var(--grid-layout-gap));
+        --grid-item--max-width: calc((100% - var(--total-gap-width)) / var(--grid-column-count));
+
+        display: grid;
+        place-items: center;
+
+        grid-template-columns: repeat(auto-fill, minmax(max(var(--grid-item--min-width), var(--grid-item--max-width)), 1fr));
+        grid-gap: var(--grid-layout-gap);
+    }
+
+    .nav__link {
+        padding: 16px 5px;
+        width: 60px;
+        float: left;
+        text-decoration: none;
+        color: #eeeeee;
+        font-weight: 500;
+        font-size: 10px;
+        overflow: hidden;
+
+    }
 }

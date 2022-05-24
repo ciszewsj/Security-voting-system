@@ -2,6 +2,7 @@ import AbstractView from "./AbstractView.js";
 import {getSession} from "../logic/StorageControler.mjs";
 import {navigateTo} from "../logic/ReloadController.mjs";
 import {addError} from "../logic/ErrorController.mjs";
+import {getImage} from "../logic/CommonAsks.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -33,6 +34,10 @@ export default class extends AbstractView {
         })).json();
         if (imagesInfo.status === "SUCCESS") {
             document.getElementById("image-grid").innerHTML = "";
+            if (imagesInfo.body.length === 0) {
+                document.getElementById("image-grid").innerText = "Brak zawartości do wyświetlenia";
+                return;
+            }
             for (let i in imagesInfo.body) {
                 let newImage = document.createElement("a");
                 newImage.className = "post-box";
@@ -54,26 +59,11 @@ export default class extends AbstractView {
                     .addEventListener("click", (e) => {
                         navigateTo(`/imageToAccept/${imagesInfo.body[i].ImageId}`);
                     });
-                this.getImage(imagesInfo.body[i].ImageId);
+                getImage(`image-${imagesInfo.body[i].ImageId}`, imagesInfo.body[i].ImageId);
 
             }
         } else if (imagesInfo === undefined) {
             addError(imagesInfo.body.msg);
-        }
-    }
-
-    async getImage(imageId) {
-        try {
-            let img = document.getElementById(`image-${imageId}`);
-            let response = await fetch(`/api/getImage/${imageId}`);
-            if (response.status === 200) {
-                let blob = await response.blob();
-                img.src = URL.createObjectURL(blob);
-            } else {
-                addError(response.body.msg);
-            }
-        } catch (e) {
-            addError(e);
         }
     }
 }

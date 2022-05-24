@@ -2,6 +2,7 @@ import AbstractView from "./AbstractView.js";
 import {getSession} from "../logic/StorageControler.mjs";
 import {navigateTo} from "../logic/ReloadController.mjs";
 import {addError} from "../logic/ErrorController.mjs";
+import {getImage} from "../logic/CommonAsks.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -36,7 +37,12 @@ export default class extends AbstractView {
                     }
                     return 1;
                 });
-                document.getElementById("image-grid").innerHTML = "";
+                let imageGrid = document.getElementById("image-grid")
+                imageGrid.innerHTML = "";
+                if (imagesInfo.body.length === 0) {
+                    imageGrid.innerText = "Brak zawartości do wyświetlenia";
+                    return;
+                }
                 for (let i in imagesInfo.body) {
                     let div = document.createElement("a");
                     div.className = "post-box";
@@ -55,7 +61,7 @@ export default class extends AbstractView {
                                                 <p>${imagesInfo.body[i].Author}</p>
                                             </div>
                                             <div class="like-box">
-                                                <div id="like-button-${imagesInfo.body[i].ImageId}" class="like-button ${liked}">+</div>
+                                                <div id="like-button-${imagesInfo.body[i].ImageId}" class="like-element ${liked}">+</div>
                                     
                                                 <div class="like-number">
                                                     <p>${imagesInfo.body[i].Likes}</p>
@@ -63,12 +69,12 @@ export default class extends AbstractView {
                                             </div>
                                         </div>
                                     `;
-                    document.getElementById("image-grid").appendChild(div);
+                    imageGrid.appendChild(div);
                     document.getElementById(`post-box-${imagesInfo.body[i].ImageId}`)
                         .addEventListener("click", (e) => {
                             navigateTo(`/posts/${imagesInfo.body[i].ImageId}`);
                         });
-                    this.getImage(imagesInfo.body[i].ImageId);
+                    getImage(`image-${imagesInfo.body[i].ImageId}`, imagesInfo.body[i].ImageId);
                 }
 
             } else {
@@ -80,18 +86,5 @@ export default class extends AbstractView {
 
     }
 
-    async getImage(imageId) {
-        try {
-            let img = document.getElementById(`image-${imageId}`);
-            let response = await fetch(`/api/getImage/${imageId}`);
-            if (response.status === 200) {
-                let blob = await response.blob();
-                img.src = URL.createObjectURL(blob);
-            } else {
-                addError(response.body.msg);
-            }
-        } catch (e) {
-            addError(e);
-        }
-    }
+
 }

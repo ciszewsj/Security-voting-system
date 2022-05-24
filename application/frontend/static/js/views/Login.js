@@ -2,7 +2,7 @@ import AbstractView from "./AbstractView.js";
 import {addSession, getSession} from "../logic/StorageControler.mjs";
 import {navigateTo} from "../logic/ReloadController.mjs";
 import {checkIfLogin} from "../logic/SessionController.mjs";
-import {addError, addServerInfo} from "../logic/ErrorController.mjs";
+import {addError, addServerInfo, clearErrors} from "../logic/ErrorController.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -23,7 +23,7 @@ export default class extends AbstractView {
             <input type="password" id="password-login" name="password" autocomplete="on"><br>
             <div id="password_error"></div></br>
         </form>
-        <button id="login-button"> Zaloguj </button>
+        <button id="login-button" class="button"> Zaloguj </button>
         `;
     }
 
@@ -75,6 +75,7 @@ let login = async () => {
                         navigateTo("/");
                         checkIfLogin();
                         addServerInfo();
+                        clearErrors();
                         return;
                     } else if (response.status === "FAILURE" || response.status === "UNAUTHORIZED") {
                         err_email.innerHTML = "";
@@ -82,7 +83,6 @@ let login = async () => {
                         err_general.innerHTML = "";
                         for (let i in response.body.errors) {
                             let err = response.body.errors[i];
-                            console.log(err)
                             switch (err.param) {
                                 case  'General':
                                     err_general.innerHTML = `<label>${err.msg}</label>`
@@ -104,7 +104,6 @@ let login = async () => {
             });
         } catch
             (e) {
-            addError(e);
         }
     }
 ;

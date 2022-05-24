@@ -2,6 +2,7 @@ import AbstractView from "./AbstractView.js";
 import {getSession} from "../logic/StorageControler.mjs";
 import {navigateTo} from "../logic/ReloadController.mjs";
 import {addError} from "../logic/ErrorController.mjs";
+import {getImage} from "../logic/CommonAsks.mjs";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -41,7 +42,6 @@ export default class extends AbstractView {
         href = href[href.length - 1];
         let token = getSession().token;
 
-        let image = document.getElementById("image-accept");
         let title = document.getElementById("image-title-accept");
         let authorImage = document.getElementById("image-author-accept");
         let description = document.getElementById("image-description");
@@ -73,18 +73,8 @@ export default class extends AbstractView {
             authorImage.textContent = response.body.Name;
             description.textContent = response.body.Description;
 
-            fetch(`/api/getImage/${response.body.Id}`)
-                .then(img => {
-                    if (img.status === 200) {
-                        img.blob().then(blob => {
-                            image.src = URL.createObjectURL(blob);
-                        });
-                    } else {
-                        addError(img.body.msg);
-                    }
-                }).catch(e => {
-                addError(e);
-            });
+            getImage("image-accept", response.body.Id);
+
             acceptButton.addEventListener("click", () => {
                 fetch(`/api/acceptImage/${href}`,
                     {

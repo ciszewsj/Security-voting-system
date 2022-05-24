@@ -114,6 +114,7 @@ export default class extends AbstractView {
                                 imageLikes.innerText = String(parseInt(imageLikes.innerText) + 1);
                                 liked = `true`;
                             } else {
+                                console.log(response)
                                 addError(response.body.msg);
                             }
                         }).catch(e => {

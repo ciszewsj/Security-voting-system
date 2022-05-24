@@ -14,6 +14,7 @@
   "access_token": "SecreteKey",
   "secret_key": "SecreteKey",
   "secret_key_jwt": "1222",
+  "secret-key-jwt-time": 86400,
   "image_size": {
     "min_width": 640,
     "min_height": 480,

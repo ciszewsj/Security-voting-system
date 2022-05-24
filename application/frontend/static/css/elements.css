@@ -68,6 +68,15 @@
     align-items: center;
 }
 
+.like-element {
+    font-size: 26px;
+    font-weight: bolder;
+    height: 40%;
+    width: 100%;
+    padding: 0;
+    border: none;
+}
+
 .like-button {
     font-size: 26px;
     font-weight: bolder;
@@ -142,4 +151,36 @@ a, a:hover, a:focus, a:active {
 .description {
     text-align: justify;
     text-justify: inter-word;
+}
+
+.button {
+    border-radius: 10px;
+    font-size: 20px ;
+    padding: 5px 20px;
+    background-color: rgba(187,187,187,0.2);
+}
+
+.button:hover     {
+    border-radius: 10px;
+    font-size: 20px ;
+    padding: 5px 20px;
+    background-color: rgba(187,187,187,0.3);
+    box-shadow: 5px 10px #888888;
+}
+
+.button:active     {
+    border-radius: 10px;
+    font-size: 20px ;
+    padding: 5px 20px;
+    background-color: rgba(187,187,187,0.6);
+    box-shadow: 5px 3px #888888;
+}
+
+
+input {
+    width: 80%;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: 20px;
+
 }

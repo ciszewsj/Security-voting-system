@@ -8,13 +8,13 @@ const authenticateJWT = (req, res, next) => {
     if (token) {
         jwt.verify(token, config.get("secret_key_jwt"), (err, user) => {
             if (err) {
-                return res.status(403).json(response.unauthorized_response({}));
+                return res.status(403).json(response.unauthorized_response({msg:"Zaloguj się aby wykonać tą akcję"}));
             }
             req.userid = user.id;
             next();
         });
     } else {
-        return res.status(401).json(response.unauthorized_response({}));
+        return res.status(401).json(response.unauthorized_response({msg:"Zaloguj się aby wykonać tą akcję"}));
     }
 };
 const checkUserDataJWT = (req, res, next) => {

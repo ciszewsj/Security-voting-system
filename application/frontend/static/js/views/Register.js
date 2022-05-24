@@ -1,5 +1,5 @@
 import AbstractView from "./AbstractView.js";
-import {addSession, getSession} from "../logic/StorageControler.mjs";
+import {getSession} from "../logic/StorageControler.mjs";
 import {navigateTo} from "../logic/ReloadController.mjs";
 import {addError} from "../logic/ErrorController.mjs";
 
@@ -25,7 +25,7 @@ export default class extends AbstractView {
             <input type="password" id="password-register" name="password" autocomplete="on"><br>
             <div id="password_r_error"></div></br>
         </form>
-        <button id="login-button"> Utwórz konto </button>
+        <button id="login-button" class="button"> Utwórz konto </button>
         `;
     }
 

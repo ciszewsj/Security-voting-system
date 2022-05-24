@@ -12,7 +12,6 @@ const databaseConnector = require('./database');
 
 const response = require('./response');
 const {authenticateJWT, checkUserDataJWT} = require("./authentication");
-const {auth} = require("mysql/lib/protocol/Auth");
 
 const sizeOf = require('image-size');
 
@@ -199,7 +198,7 @@ app.post('/api/login',
                 const token = jwt.sign({
                     id: userData.Id
                 }, "1222", {
-                    expiresIn: 86400
+                    expiresIn: config.get("secret-key-jwt-time")
                 });
                 return res.status(200).json(response.success_response(
                     {
@@ -245,7 +244,7 @@ app.post('/api/addImage',
         .exists()
         .notEmpty()
         .isBase64(),
-    async (req, res) => {
+async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json(response.failure_response({errors: errors.array()}));
@@ -295,7 +294,7 @@ app.get('/api/likeImage/:id',
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest nie aktywny bądź nie istnieje"}));
             }
             await database.likeImage(req.userid, req.params.id);
-            return res.json(response.success_response({}));
+            return res.json(response.success_response({ }));
         } catch (e) {
             if (e.code === "ER_DUP_ENTRY") {
                 return res.status(400).json(response.failure_response({"msg": "Zdjęcie zostało już polubione"}));
