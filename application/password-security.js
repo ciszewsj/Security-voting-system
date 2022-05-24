@@ -4,7 +4,7 @@ const config = require('config');
 class PasswordSecurity {
 
     async hashPassword(password) {
-        let salt = await bcrypt.genSalt(10);
+        let salt = await bcrypt.genSalt(config.get("saltRounds"));
         return bcrypt.hash(password, salt);
     };
 
