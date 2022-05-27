@@ -14,7 +14,4 @@ export default class {
 
     async addLogic() {
     }
-
-    async removeLogic(){
-    }
 }

@@ -1,6 +1,6 @@
 import Dashboard from "../views/Dashboard.js";
 import Posts from "../views/Posts.js";
-import Settings from "../views/About.js";
+import About from "../views/About.js";
 import Login from "../views/Login.js";
 import Register from "../views/Register.js";
 import MyImageSite from "../views/MyImageSite.js";
@@ -37,7 +37,7 @@ export const router = async () => {
     }, {
         path: "/posts/:id", view: Posts
     }, {
-        path: "/settings", view: Settings
+        path: "/about", view: About
     }, {
         path: "/login", view: Login
     }, {

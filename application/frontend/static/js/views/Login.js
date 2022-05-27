@@ -12,7 +12,7 @@ export default class extends AbstractView {
 
     async getHtml() {
         return `
-        <h1>Login</h1>
+        <h1>Logowanie</h1>
         <div id="general_errors">
         </div></br>
         <form id="login-form">

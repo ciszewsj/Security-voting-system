@@ -11,7 +11,7 @@ export default class extends AbstractView {
 
     async getHtml() {
         return `
-        <h1>Register</h1>
+        <h1>Utwórz konto</h1>
         <div id="general_r_errors">
         </div></br>
         <form id="register-form">

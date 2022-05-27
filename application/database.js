@@ -124,7 +124,7 @@ class Database {
     }
 
     async getInfo(userid) {
-        let sql = `SELECT * FROM info WHERE UserId = "10"`;
+        let sql = `SELECT * FROM info WHERE UserId = "${userid}"`;
         return await this.query(sql);
     }
 

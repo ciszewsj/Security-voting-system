@@ -83,9 +83,7 @@ app.get('/api/removeImage/:id',
                 }
             }
             let info = (await database.getRawImageInfo(req.params.id))[0];
-            console.log(info);
             if (info.Active === 0) {
-                console.log(info);
                 await database.removeImage(req.params.id);
                 fs.unlinkSync("images/" + req.params.id + ".png")
                 if (user.Role === "Admin") {
@@ -97,7 +95,7 @@ app.get('/api/removeImage/:id',
                 }
                 return res.json(response.success_response({}));
             }
-            return res.json(response.failure_response({msg: "Zdjęcie jest aktywne"}));
+            return res.status(400).json(response.failure_response({msg: "Zdjęcie jest aktywne"}));
         } catch (e) {
             console.error(e);
             return res.status(500).json(response.internal_error_response({}));
@@ -173,7 +171,9 @@ app.post('/api/login',
         .withMessage("Nieprwaidłowy email"),
     body('Password').isString()
         .isString()
-        .isLength({min: 5, max: 60}),
+        .withMessage("Hasło musi być typu tekstowego")
+        .isLength({min: 5, max: 60})
+        .withMessage("Hasło musi mieć pomiędzy 5 a 60 znaków"),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -197,7 +197,7 @@ app.post('/api/login',
             if (await pass.comparePassword(req.body.Password, userData.Password)) {
                 const token = jwt.sign({
                     id: userData.Id
-                }, "1222", {
+                }, config.get("secret_key_jwt"), {
                     expiresIn: config.get("secret-key-jwt-time")
                 });
                 return res.status(200).json(response.success_response(
@@ -207,7 +207,7 @@ app.post('/api/login',
                         'name': userData.Name
                     }));
             }
-            return res.json(response.unauthorized_response(
+            return res.status(403).json(response.unauthorized_response(
                 {
                     errors: [{
                         "msg": "Nazwa użytkownika lub hasło jest nieprawidłowa.",
@@ -236,15 +236,22 @@ app.post('/api/addImage',
     authenticateJWT,
     body('Title')
         .exists()
+        .withMessage("Tytuł musi istnieć")
         .isString()
-        .isLength({min: 1, max: 255}),
+        .withMessage("Tytuł musi być typu tekstowego")
+        .isLength({min: 1, max: 255})
+        .withMessage("Tytuł musi mieć pomiędzy 1 a 255 znaków"),
     body('Description')
-        .isLength({max: 1024}),
+        .isLength({max: 1024})
+        .withMessage("Opis może mieć maksymalnie 1024 znaki"),
     body('Image')
         .exists()
+        .withMessage("Obrazek musi istnieć")
         .notEmpty()
-        .isBase64(),
-async (req, res) => {
+        .withMessage("Obrazek nie może być pusty")
+        .isBase64()
+        .withMessage("Obrazek musi mieć typ Base64"),
+    async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json(response.failure_response({errors: errors.array()}));
@@ -266,7 +273,7 @@ async (req, res) => {
                 await database.putImage(req.body.Title, req.body.Description, req.userid, config.get(`acceptImageAutomatically`));
             } catch (e) {
                 if (e.code === "ER_DUP_ENTRY") {
-                    return res.json(response.failure_response({"msg": "Użytkownik może umieścić tylko 1 obrazek"}));
+                    return res.status(400).json(response.failure_response({"msg": "Użytkownik może umieścić tylko 1 obrazek"}));
                 } else {
                     throw e;
                 }
@@ -283,7 +290,8 @@ async (req, res) => {
 
 app.get('/api/likeImage/:id',
     authenticateJWT,
-    param('id').isNumeric(),
+    param('id').isNumeric()
+        .withMessage("id musi być typu numerycznego"),
     async (req, res) => {
         try {
             const errors = validationResult(req);
@@ -294,7 +302,7 @@ app.get('/api/likeImage/:id',
                 return res.status(400).json(response.failure_response({"msg": "Obrazek jest nie aktywny bądź nie istnieje"}));
             }
             await database.likeImage(req.userid, req.params.id);
-            return res.json(response.success_response({ }));
+            return res.json(response.success_response({}));
         } catch (e) {
             if (e.code === "ER_DUP_ENTRY") {
                 return res.status(400).json(response.failure_response({"msg": "Zdjęcie zostało już polubione"}));
@@ -307,7 +315,8 @@ app.get('/api/likeImage/:id',
 
 app.get('/api/unlikeImage/:id',
     authenticateJWT,
-    param('id').isNumeric(),
+    param('id').isNumeric()
+        .withMessage("id musi być typu numerycznego"),
     async (req, res) => {
         try {
             const errors = validationResult(req);
@@ -328,7 +337,8 @@ app.get('/api/unlikeImage/:id',
 
 app.get('/api/acceptImage/:id',
     authenticateJWT,
-    param('id').isNumeric(),
+    param('id').isNumeric()
+        .withMessage("id musi być typu numerycznego"),
     async (req, res) => {
         try {
             const errors = validationResult(req);
@@ -376,7 +386,8 @@ app.get('/api/getImagesToAcceptList',
 
 app.get('/api/getImageToAccept/:id',
     authenticateJWT,
-    param('id').isNumeric(),
+    param('id').isNumeric()
+        .withMessage("id musi być typu numerycznego"),
     async (req, res) => {
         try {
             const errors = validationResult(req);
@@ -411,7 +422,8 @@ app.get('/api/userinfo/getInfoList',
 
 app.get('/api/userinfo/removeInfoElement/:id',
     authenticateJWT,
-    param('id').isNumeric(),
+    param('id').isNumeric()
+        .withMessage("id musi być typu numerycznego"),
     async (req, res) => {
         try {
             const errors = validationResult(req);
